@@ -12,7 +12,7 @@ class Basket(BaseModel):
     itemIds: List[int] = []
     locale: str
     paymentId: str = None
-    reqUserAgent: str
+    requestUserAgent: str
     timestamp: datetime = None
     totalItems: int
     totalPrice: float
