@@ -4,12 +4,13 @@ from typing import List
 from pydantic import BaseModel
 import os
 from elasticsearch import Elasticsearch
+import logging
 
 
 class Basket(BaseModel):
     currency: str
     deviceType: str = None
-    itemIds: List[int] = []
+    itemIds: List[int]
     locale: str
     paymentId: str = None
     requestUserAgent: str
@@ -18,14 +19,38 @@ class Basket(BaseModel):
     totalPrice: float
 
 
+logger = logging.getLogger("app")
+console_handler = logging.StreamHandler()
+logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
+
+log_level = os.getenv('LOG_LEVEL')
+if log_level:
+    log_level = log_level.lower()
+    if log_level == 'debug':
+        logging.basicConfig(level=logging.DEBUG)
+    elif log_level == 'info':
+        logging.basicConfig(level=logging.INFO)
+    elif log_level == 'warning':
+        logging.basicConfig(level=logging.WARNING)
+    elif log_level == 'error':
+        logging.basicConfig(level=logging.ERROR)
+    elif log_level == 'critical':
+        logging.basicConfig(level=logging.CRITICAL)
+    else:
+        logger.warning(f'Unknown LOG_LEVEL value: {log_level}')
+
+# crash if not set
 ES_URL = os.environ['ELASTICSEARCH_URL']
-print(f'ELASTICSEARCH_URL: {ES_URL}')
+logger.info(f'ELASTICSEARCH_URL: {ES_URL}')
+
+# crash if not set
 ES_INDEX_NAME = os.environ['ELASTICSEARCH_INDEX_NAME']
-print(f'ELASTICSEARCH_INDEX_NAME: {ES_INDEX_NAME}')
+logger.info(f'ELASTICSEARCH_INDEX_NAME: {ES_INDEX_NAME}')
 
 es = Elasticsearch([ES_URL])
-es.indices.create(index=ES_INDEX_NAME, ignore=400)
-
+if not es.indices.exists(ES_INDEX_NAME):
+    es.indices.create(index=ES_INDEX_NAME, ignore=400)
 
 app = FastAPI()
 
