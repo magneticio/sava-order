@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from datetime import datetime
 from typing import List
 from pydantic import BaseModel
@@ -63,4 +63,11 @@ async def create_basket(basket: Basket):
     basket.paymentId = r['_id']
     
     return basket.dict()
+
+@app.get("/ready/")
+async def ready():
+    if not es.indices.exists(ES_INDEX_NAME):
+        raise HTTPException(status_code=418, detail=f'Elasticsearch index {ES_INDEX_NAME} unavailable')
+
+    return {'ready': True}
 
